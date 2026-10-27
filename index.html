@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matrimonio Chiara & Ivan - Gestione Inviti</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #8a6240;
+      --primary-light: #b38b6d;
+      --primary-dark: #634327;
+      --bg-page: #fbf9f6;
+      --bg-card: #ffffff;
+      --border: #e8e2d8;
+      --text: #2d2a26;
+      --text-muted: #6e675f;
+      --success: #2e7d32;
+      --warning: #ed6c02;
+      --danger: #d32f2f;
+      --accent: #d4af37;
+      --radius: 12px;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 24px;
+      background: linear-gradient(145deg, #ffffff, #fdfbf7);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    header h1 {
+      font-family: 'Cinzel', Georgia, serif;
+      font-size: 2.2rem;
+      color: var(--primary-dark);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .header-badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 14px;
+      background: #f4ece4;
+      color: var(--primary);
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    /* KPI Dashboard */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      padding: 18px 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .kpi-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .kpi-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-top: 4px;
+    }
+
+    .kpi-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .kpi-card.conf { border-left: 5px solid var(--success); }
+    .kpi-card.att { border-left: 5px solid var(--warning); }
+    .kpi-card.rif { border-left: 5px solid var(--danger); }
+    .kpi-card.food { border-left: 5px solid var(--accent); }
+
+    /* Action bar */
+    .actions-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .search-filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      flex: 1;
+    }
+
+    input[type="text"], select, input[type="date"], input[type="number"], textarea {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+      background: #fff;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      padding: 10px 18px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-outline {
+      background: white;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      background: #f4ece4;
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 0.8rem;
+    }
+
+    .btn-danger-sm {
+      background: #fee2e2;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    .btn-danger-sm:hover {
+      background: #fca5a5;
+    }
+
+    /* Table Container */
+    .table-container {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background-color: #faf7f2;
+      color: var(--primary-dark);
+      font-weight: 600;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+      vertical-align: middle;
+    }
+
+    tbody tr:hover {
+      background-color: #fdfaf6;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-confermato { background: #e8f5e9; color: var(--success); }
+    .badge-in-attesa { background: #fff3e0; color: var(--warning); }
+    .badge-rifiutato { background: #ffebee; color: var(--danger); }
+
+    .food-tag {
+      display: inline-block;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* Modal Form */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 26px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .modal-header h2 {
+      font-family: 'Cinzel', Georgia, serif;
+      font-size: 1.4rem;
+      color: var(--primary-dark);
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full {
+      grid-column: span 2;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .chip-btn {
+      background: #f4ece4;
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      color: var(--primary-dark);
+      transition: all 0.15s;
+    }
+
+    .chip-btn:hover {
+      background: var(--primary-light);
+      color: white;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+
+    @media print {
+      body { padding: 0; background: #fff; }
+      header, .kpi-grid, .actions-bar, .modal-overlay, .btn-action { display: none !important; }
+      .table-container { border: none; box-shadow: none; }
+      th, td { padding: 8px 10px; font-size: 0.8rem; }
+    }
+
+    @media (max-width: 768px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: span 1; }
+      header h1 { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Intestazione -->
+    <header>
+      <h1>Chiara & Ivan</h1>
+      <p>Gestione Inviti & Ricevimento • 3 Dicembre 2026, Roma</p>
+      <div class="header-badge">Santo Stefano degli Abissini & Villa Agrippina Gran Meliá</div>
+    </header>
+
+    <!-- Dashboard Contatori -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-title">Totale Inviti Inviati</span>
+        <span class="kpi-value" id="kpi-tot-inviti">0</span>
+        <span class="kpi-sub">Nuclei / Famiglie</span>
+      </div>
+      <div class="kpi-card conf">
+        <span class="kpi-title">Ospiti Confermati</span>
+        <span class="kpi-value" id="kpi-tot-persone">0</span>
+        <span class="kpi-sub"><span id="kpi-adulti">0</span> adulti, <span id="kpi-bambini">0</span> bambini</span>
+      </div>
+      <div class="kpi-card att">
+        <span class="kpi-title">In Attesa di Conferma</span>
+        <span class="kpi-value" id="kpi-in-attesa">0</span>
+        <span class="kpi-sub">Da ricontattare</span>
+      </div>
+      <div class="kpi-card rif">
+        <span class="kpi-title">Rifiutati / Assenti</span>
+        <span class="kpi-value" id="kpi-rifiutati">0</span>
+        <span class="kpi-sub">Hanno declinato</span>
+      </div>
+      <div class="kpi-card food">
+        <span class="kpi-title">Note Alimentari</span>
+        <span class="kpi-value" id="kpi-food-count">0</span>
+        <span class="kpi-sub">Richieste speciali catering</span>
+      </div>
+    </div>
+
+    <!-- Barra Azioni e Ricerca -->
+    <div class="actions-bar">
+      <div class="search-filter-group">
+        <input type="text" id="searchInput" placeholder="Cerca invitato per nome..." oninput="renderTable()">
+        <select id="filterStato" onchange="renderTable()">
+          <option value="">Tutti gli stati</option>
+          <option value="Confermato">Confermati</option>
+          <option value="In attesa">In attesa</option>
+          <option value="Rifiutato">Rifiutati</option>
+        </select>
+        <select id="filterModalita" onchange="renderTable()">
+          <option value="">Tutte le modalità</option>
+          <option value="WhatsApp">WhatsApp</option>
+          <option value="Telefono">Telefono</option>
+          <option value="A mano">A mano / Partecipazione</option>
+          <option value="Email">Email</option>
+          <option value="Altro">Altro</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="toggleOnlyDietary()" id="dietaryFilterBtn">Solo con note alimentari</button>
+      </div>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="handleFileImport(event)">
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()">📊 Esporta CSV</button>
+        <button class="btn btn-outline btn-sm" onclick="exportJSON()">💾 Salva Backup</button>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFileInput').click()">📂 Carica Backup</button>
+        <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuovo Invitato</button>
+      </div>
+    </div>
+
+    <!-- Tabella Invitati -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Invitato / Famiglia</th>
+            <th>Data Invito</th>
+            <th>Modalità</th>
+            <th>Stato</th>
+            <th>Data Conf.</th>
+            <th>Partecipanti</th>
+            <th>Note Alimentari</th>
+            <th>Note Extra</th>
+            <th class="btn-action" style="text-align: right;">Azioni</th>
+          </tr>
+        </thead>
+        <tbody id="guestTableBody">
+          <!-- Righe generate via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal per Aggiunta / Modifica -->
+  <div class="modal-overlay" id="guestModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Nuovo Invitato</h2>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+
+      <form id="guestForm" onsubmit="saveGuest(event)">
+        <input type="hidden" id="guestId">
+
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="nome">Nome Invitato / Nucleo Familiare *</label>
+            <input type="text" id="nome" required placeholder="Es. Marco Rossi e Famiglia">
+          </div>
+
+          <div class="form-group">
+            <label for="data_invito">Data Invito</label>
+            <input type="date" id="data_invito">
+          </div>
+
+          <div class="form-group">
+            <label for="modalita">Modalità Invito</label>
+            <select id="modalita">
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="Telefono">Telefono</option>
+              <option value="A mano">A mano / Partecipazione</option>
+              <option value="Email">Email</option>
+              <option value="Altro">Altro</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="stato">Stato Invito</label>
+            <select id="stato" onchange="handleStatoChange()">
+              <option value="In attesa">In attesa</option>
+              <option value="Confermato">Confermato</option>
+              <option value="Rifiutato">Rifiutato</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="data_conferma">Data Conferma</label>
+            <input type="date" id="data_conferma">
+          </div>
+
+          <div class="form-group">
+            <label for="num_adulti">Numero Adulti</label>
+            <input type="number" id="num_adulti" min="0" value="1">
+          </div>
+
+          <div class="form-group">
+            <label for="num_bambini">Numero Bambini</label>
+            <input type="number" id="num_bambini" min="0" value="0">
+          </div>
+
+          <div class="form-group full">
+            <label for="note_alimentari">Note Alimentari (Intolleranze / Diete)</label>
+            <input type="text" id="note_alimentari" placeholder="Es. 1 Celiaco, 1 Vegano, no lattosio...">
+            <div class="quick-chips">
+              <span class="chip-btn" onclick="addChip('Vegano')">+ Vegano</span>
+              <span class="chip-btn" onclick="addChip('Vegetariano')">+ Vegetariano</span>
+              <span class="chip-btn" onclick="addChip('Celiaco / Senza Glutine')">+ Celiaco</span>
+              <span class="chip-btn" onclick="addChip('No Lattosio')">+ No Lattosio</span>
+              <span class="chip-btn" onclick="addChip('Allergia Frutta a Guscio')">+ Frutta a Guscio</span>
+              <span class="chip-btn" onclick="addChip('No Pesce/Crostacei')">+ No Crostacei</span>
+            </div>
+          </div>
+
+          <div class="form-group full">
+            <label for="note_extra">Note Varie (Tavolo, alloggio, logistica)</label>
+            <textarea id="note_extra" rows="2" placeholder="Es. Arrivano da Milano in treno, sistemazione albergo..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal()">Annulla</button>
+          <button type="submit" class="btn btn-primary">Salva Invitato</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let invitati = [];
+    let filterDietaryOnly = false;
+    let isServerMode = false;
+
+    // Inizializzazione
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Imposta data odierna come default
+      document.getElementById('data_invito').value = new Date().toISOString().split('T')[0];
+      await loadGuests();
+    });
+
+    async function checkServer() {
+      try {
+        const res = await fetch('/api/invitati', { method: 'GET' });
+        if (res.ok) {
+          isServerMode = true;
+          return true;
+        }
+      } catch (e) {
+        isServerMode = false;
+      }
+      return false;
+    }
+
+    async function loadGuests() {
+      const serverActive = await checkServer();
+      if (serverActive) {
+        try {
+          const res = await fetch('/api/invitati');
+          invitati = await res.json();
+        } catch (e) {
+          console.warn("Errore caricamento da server, fallback localStorage", e);
+          loadFromLocalStorage();
+        }
+      } else {
+        loadFromLocalStorage();
+      }
+      renderTable();
+      updateKPIs();
+    }
+
+    function loadFromLocalStorage() {
+      const saved = localStorage.getItem("matrimonio_chiara_ivan_invitati");
+      if (saved) {
+        try { invitati = JSON.parse(saved); } catch (e) { invitati = []; }
+      } else {
+        // Dati dimostrativi iniziali
+        invitati = [
+          {
+            id: 1,
+            nome: "Famiglia Vaccarello Domenico",
+            data_invito: "2026-10-25",
+            modalita: "A mano",
+            stato: "Confermato",
+            data_conferma: "2026-10-26",
+            num_adulti: 2,
+            num_bambini: 0,
+            note_alimentari: "Nessuna",
+            note_extra: "Genitori dello sposo"
+          }
+        ];
+        saveToLocalStorage();
+      }
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem("matrimonio_chiara_ivan_invitati", JSON.stringify(invitati));
+    }
+
+    function updateKPIs() {
+      const totInviti = invitati.length;
+      const confermati = invitati.filter(g => g.stato === 'Confermato');
+      const inAttesa = invitati.filter(g => g.stato === 'In attesa');
+      const rifiutati = invitati.filter(g => g.stato === 'Rifiutato');
+
+      const adultiConf = confermati.reduce((sum, g) => sum + (parseInt(g.num_adulti) || 0), 0);
+      const bambiniConf = confermati.reduce((sum, g) => sum + (parseInt(g.num_bambini) || 0), 0);
+      const totPersoneConf = adultiConf + bambiniConf;
+
+      const foodCount = invitati.filter(g => g.note_alimentari && g.note_alimentari.trim() !== '' && g.note_alimentari.toLowerCase() !== 'nessuna').length;
+
+      document.getElementById('kpi-tot-inviti').innerText = totInviti;
+      document.getElementById('kpi-tot-persone').innerText = totPersoneConf;
+      document.getElementById('kpi-adulti').innerText = adultiConf;
+      document.getElementById('kpi-bambini').innerText = bambiniConf;
+      document.getElementById('kpi-in-attesa').innerText = inAttesa.length;
+      document.getElementById('kpi-rifiutati').innerText = rifiutati.length;
+      document.getElementById('kpi-food-count').innerText = foodCount;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('guestTableBody');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const fStato = document.getElementById('filterStato').value;
+      const fMod = document.getElementById('filterModalita').value;
+
+      let list = invitati.filter(item => {
+        const matchName = item.nome.toLowerCase().includes(search);
+        const matchStato = !fStato || item.stato === fStato;
+        const matchMod = !fMod || item.modalita === fMod;
+        const matchFood = !filterDietaryOnly || (item.note_alimentari && item.note_alimentari.trim() !== '' && item.note_alimentari.toLowerCase() !== 'nessuna');
+        return matchName && matchStato && matchMod && matchFood;
+      });
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #888; padding: 30px;">Nessun invitato trovato con i filtri selezionati.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(g => {
+        let badgeClass = 'badge-in-attesa';
+        if (g.stato === 'Confermato') badgeClass = 'badge-confermato';
+        if (g.stato === 'Rifiutato') badgeClass = 'badge-rifiutato';
+
+        const foodHtml = (g.note_alimentari && g.note_alimentari.trim() !== '' && g.note_alimentari.toLowerCase() !== 'nessuna') 
+          ? `<span class="food-tag">⚠️ ${escapeHtml(g.note_alimentari)}</span>` 
+          : `<span style="color:#aaa;">-</span>`;
+
+        return `
+          <tr>
+            <td><strong>${escapeHtml(g.nome)}</strong></td>
+            <td>${g.data_invito || '-'}</td>
+            <td>${g.modalita || '-'}</td>
+            <td><span class="badge ${badgeClass}">${g.stato}</span></td>
+            <td>${g.data_conferma || '-'}</td>
+            <td>${g.num_adulti} ad. ${g.num_bambini > 0 ? '+ ' + g.num_bambini + ' bamb.' : ''}</td>
+            <td>${foodHtml}</td>
+            <td><small style="color: #666;">${escapeHtml(g.note_extra || '-')}</small></td>
+            <td class="btn-action" style="text-align: right; white-space: nowrap;">
+              <button class="btn btn-outline btn-sm" onclick="editGuest(${g.id})">✏️ Modifica</button>
+              <button class="btn btn-danger-sm btn-sm" onclick="deleteGuest(${g.id})">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function toggleOnlyDietary() {
+      filterDietaryOnly = !filterDietaryOnly;
+      const btn = document.getElementById('dietaryFilterBtn');
+      if (filterDietaryOnly) {
+        btn.classList.add('btn-primary');
+        btn.classList.remove('btn-outline');
+      } else {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline');
+      }
+      renderTable();
+    }
+
+    function openModal(isEdit = false) {
+      document.getElementById('modalTitle').innerText = isEdit ? "Modifica Invitato" : "Nuovo Invitato";
+      document.getElementById('guestModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('guestModal').classList.remove('active');
+      document.getElementById('guestForm').reset();
+      document.getElementById('guestId').value = "";
+      document.getElementById('data_invito').value = new Date().toISOString().split('T')[0];
+    }
+
+    function handleStatoChange() {
+      const stato = document.getElementById('stato').value;
+      const dataConfInput = document.getElementById('data_conferma');
+      if (stato === 'Confermato' && !dataConfInput.value) {
+        dataConfInput.value = new Date().toISOString().split('T')[0];
+      }
+    }
+
+    function addChip(text) {
+      const input = document.getElementById('note_alimentari');
+      if (input.value.trim() === '' || input.value.toLowerCase() === 'nessuna') {
+        input.value = text;
+      } else if (!input.value.includes(text)) {
+        input.value += `, ${text}`;
+      }
+    }
+
+    function editGuest(id) {
+      const g = invitati.find(x => x.id === id);
+      if (!g) return;
+
+      document.getElementById('guestId').value = g.id;
+      document.getElementById('nome').value = g.nome;
+      document.getElementById('data_invito').value = g.data_invito || '';
+      document.getElementById('modalita').value = g.modalita || 'WhatsApp';
+      document.getElementById('stato').value = g.stato || 'In attesa';
+      document.getElementById('data_conferma').value = g.data_conferma || '';
+      document.getElementById('num_adulti').value = g.num_adulti ?? 1;
+      document.getElementById('num_bambini').value = g.num_bambini ?? 0;
+      document.getElementById('note_alimentari').value = g.note_alimentari || '';
+      document.getElementById('note_extra').value = g.note_extra || '';
+
+      openModal(true);
+    }
+
+    async function saveGuest(e) {
+      e.preventDefault();
+      const id = document.getElementById('guestId').value;
+      const guestData = {
+        nome: document.getElementById('nome').value.trim(),
+        data_invito: document.getElementById('data_invito').value,
+        modalita: document.getElementById('modalita').value,
+        stato: document.getElementById('stato').value,
+        data_conferma: document.getElementById('data_conferma').value,
+        num_adulti: parseInt(document.getElementById('num_adulti').value) || 0,
+        num_bambini: parseInt(document.getElementById('num_bambini').value) || 0,
+        note_alimentari: document.getElementById('note_alimentari').value.trim(),
+        note_extra: document.getElementById('note_extra').value.trim()
+      };
+
+      if (isServerMode) {
+        try {
+          if (id) {
+            await fetch(`/api/invitati/${id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(guestData)
+            });
+          } else {
+            await fetch('/api/invitati', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(guestData)
+            });
+          }
+          await loadGuests();
+          closeModal();
+          return;
+        } catch (err) {
+          console.error("Errore salvataggio server, salvataggio locale", err);
+        }
+      }
+
+      // LocalStorage mode
+      if (id) {
+        const index = invitati.findIndex(x => x.id === parseInt(id));
+        if (index !== -1) {
+          invitati[index] = { ...guestData, id: parseInt(id) };
+        }
+      } else {
+        const newId = invitati.length > 0 ? Math.max(...invitati.map(x => x.id || 0)) + 1 : 1;
+        invitati.unshift({ ...guestData, id: newId });
+      }
+
+      saveToLocalStorage();
+      renderTable();
+      updateKPIs();
+      closeModal();
+    }
+
+    async function deleteGuest(id) {
+      if (!confirm("Sei sicuro di voler eliminare questo invitato?")) return;
+
+      if (isServerMode) {
+        try {
+          await fetch(`/api/invitati/${id}`, { method: 'DELETE' });
+          await loadGuests();
+          return;
+        } catch (err) {
+          console.error("Errore cancellazione server", err);
+        }
+      }
+
+      invitati = invitati.filter(x => x.id !== id);
+      saveToLocalStorage();
+      renderTable();
+      updateKPIs();
+    }
+
+    function exportJSON() {
+      if (invitati.length === 0) {
+        alert("Nessun dato da esportare.");
+        return;
+      }
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(invitati, null, 2));
+      const a = document.createElement("a");
+      a.href = dataStr;
+      a.download = `backup_invitati_chiara_ivan_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+    }
+
+    function handleFileImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (Array.isArray(imported)) {
+            if (confirm(`Trovati ${imported.length} invitati nel backup. Vuoi sostituire la lista attuale?`)) {
+              invitati = imported;
+              saveToLocalStorage();
+              renderTable();
+              updateKPIs();
+              alert("Dati importati con successo!");
+            }
+          } else {
+            alert("Il file selezionato non contiene un formato valido.");
+          }
+        } catch (err) {
+          alert("Errore nella lettura del file di backup: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    function exportCSV() {
+      if (invitati.length === 0) {
+        alert("Nessun dato da esportare.");
+        return;
+      }
+
+      const headers = ["ID", "Nome", "Data Invito", "Modalita", "Stato", "Data Conferma", "Adulti", "Bambini", "Note Alimentari", "Note Extra"];
+      const rows = invitati.map(g => [
+        g.id,
+        `"${(g.nome || '').replace(/"/g, '""')}"`,
+        g.data_invito || '',
+        g.modalita || '',
+        g.stato || '',
+        g.data_conferma || '',
+        g.num_adulti || 0,
+        g.num_bambini || 0,
+        `"${(g.note_alimentari || '').replace(/"/g, '""')}"`,
+        `"${(g.note_extra || '').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map(r => r.join(";"))].join("\r\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `invitati_matrimonio_chiara_ivan_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
