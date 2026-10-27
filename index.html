@@ -394,6 +394,8 @@
   <!-- Firebase SDK Compat -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <!-- SheetJS per lettura file Excel XLS / XLSX -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -462,7 +464,9 @@
 
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="handleFileImport(event)">
-        <button class="btn btn-outline btn-sm" onclick="exportCSV()">📊 Esporta CSV</button>
+        <input type="file" id="importExcelInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleExcelImport(event)">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('importExcelInput').click()" title="Carica massivamente invitati da file Excel">📗 Importa Excel</button>
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()">📊 Esporta Excel/CSV</button>
         <button class="btn btn-outline btn-sm" onclick="exportJSON()">💾 Salva Backup</button>
         <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFileInput').click()">📂 Carica Backup</button>
         <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuovo Invitato</button>
@@ -1112,6 +1116,130 @@
         }
       };
       reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    function parseExcelDate(val) {
+      if (!val) return '';
+      if (val instanceof Date) {
+        return val.toISOString().split('T')[0];
+      }
+      const s = String(val).trim();
+      const m = s.match(/^(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})$/);
+      if (m) {
+        const d = m[1].padStart(2, '0');
+        const mo = m[2].padStart(2, '0');
+        let y = m[3];
+        if (y.length === 2) y = '20' + y;
+        return `${y}-${mo}-${d}`;
+      }
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+        return s.slice(0, 10);
+      }
+      return s;
+    }
+
+    function handleExcelImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(event) {
+        try {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rawRows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+          if (!rawRows || rawRows.length < 2) {
+            alert("Il file Excel non contiene righe di dati valide.");
+            return;
+          }
+
+          // Analizza le intestazioni (riga 0)
+          const headers = rawRows[0].map(h => String(h).toLowerCase().trim());
+          const colMap = {
+            nome: headers.findIndex(h => /nome|invitat|famiglia|ospite|nominativ/.test(h)),
+            data_invito: headers.findIndex(h => /data.*invit|invito/.test(h)),
+            modalita: headers.findIndex(h => /modalit|canale|mezzo|tipo/.test(h)),
+            stato: headers.findIndex(h => /stato|conferm|esito|rispost/.test(h)),
+            data_conferma: headers.findIndex(h => /data.*conf/.test(h)),
+            num_adulti: headers.findIndex(h => /adult|n.*ad|persone|num/.test(h)),
+            num_bambini: headers.findIndex(h => /bambin|figli|under/.test(h)),
+            note_alimentari: headers.findIndex(h => /aliment|intolleran|allerg|celi|vegan|diet/.test(h)),
+            note_extra: headers.findIndex(h => /extra|note|tavol|allogg|varie|comment/.test(h))
+          };
+
+          if (colMap.nome === -1) colMap.nome = 0;
+
+          const parsedList = [];
+          for (let i = 1; i < rawRows.length; i++) {
+            const row = rawRows[i];
+            const nomeVal = colMap.nome !== -1 && row[colMap.nome] ? String(row[colMap.nome]).trim() : '';
+            if (!nomeVal) continue;
+
+            const dInv = colMap.data_invito !== -1 ? parseExcelDate(row[colMap.data_invito]) : '';
+            const dConf = colMap.data_conferma !== -1 ? parseExcelDate(row[colMap.data_conferma]) : '';
+            const mod = colMap.modalita !== -1 && row[colMap.modalita] ? String(row[colMap.modalita]).trim() : 'WhatsApp';
+            let st = colMap.stato !== -1 && row[colMap.stato] ? String(row[colMap.stato]).trim() : 'In attesa';
+            if (/si|conferm|accett/i.test(st)) st = 'Confermato';
+            else if (/no|rifiut|declin/i.test(st)) st = 'Rifiutato';
+            else if (/attes|in attesa|forse|da sent/i.test(st)) st = 'In attesa';
+
+            const ad = colMap.num_adulti !== -1 ? (parseInt(row[colMap.num_adulti]) || 1) : 1;
+            const bam = colMap.num_bambini !== -1 ? (parseInt(row[colMap.num_bambini]) || 0) : 0;
+            const aliment = colMap.note_alimentari !== -1 && row[colMap.note_alimentari] ? String(row[colMap.note_alimentari]).trim() : '';
+            const extra = colMap.note_extra !== -1 && row[colMap.note_extra] ? String(row[colMap.note_extra]).trim() : '';
+
+            parsedList.push({
+              nome: nomeVal,
+              data_invito: dInv || new Date().toISOString().split('T')[0],
+              modalita: mod,
+              stato: st,
+              data_conferma: dConf,
+              num_adulti: ad,
+              num_bambini: bam,
+              note_alimentari: aliment,
+              note_extra: extra
+            });
+          }
+
+          if (parsedList.length === 0) {
+            alert("Nessun nominativo valido trovato nel file Excel.");
+            return;
+          }
+
+          if (!confirm(`Trovati ${parsedList.length} invitati nel file Excel.\nVuoi caricarli nel database?`)) {
+            return;
+          }
+
+          if (useFirestore && db) {
+            const chunkSize = 400;
+            for (let i = 0; i < parsedList.length; i += chunkSize) {
+              const chunk = parsedList.slice(i, i + chunkSize);
+              const batch = db.batch();
+              chunk.forEach(item => {
+                const docRef = db.collection("invitati").doc();
+                batch.set(docRef, item);
+              });
+              await batch.commit();
+            }
+            alert(`Caricamento completato!\n${parsedList.length} invitati salvati e sincronizzati nel Cloud.`);
+          } else {
+            parsedList.forEach((item, idx) => {
+              invitati.unshift({ ...item, id: Date.now() + idx });
+            });
+            saveToLocalStorage();
+            renderTable();
+            updateKPIs();
+            alert(`Caricamento completato!\n${parsedList.length} invitati aggiunti alla lista.`);
+          }
+        } catch (err) {
+          console.error("Errore import Excel:", err);
+          alert("Errore durante la lettura del file Excel: " + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
       e.target.value = '';
     }
 
