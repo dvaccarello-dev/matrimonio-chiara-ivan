@@ -885,10 +885,10 @@
         return `
           <tr>
             <td><strong>${escapeHtml(g.nome || '')}</strong></td>
-            <td>${g.data_invito || '-'}</td>
+            <td>${formatDate(g.data_invito)}</td>
             <td>${g.modalita || '-'}</td>
             <td><span class="badge ${badgeClass}">${g.stato || 'In attesa'}</span></td>
-            <td>${g.data_conferma || '-'}</td>
+            <td>${formatDate(g.data_conferma)}</td>
             <td>${g.num_adulti ?? 1} ad. ${parseInt(g.num_bambini) > 0 ? '+ ' + g.num_bambini + ' bamb.' : ''}</td>
             <td>${foodHtml}</td>
             <td><small style="color: #666;">${escapeHtml(g.note_extra || '-')}</small></td>
@@ -1121,14 +1121,14 @@
         return;
       }
 
-      const headers = ["ID", "Nome", "Data Invito", "Modalita", "Stato", "Data Conferma", "Adulti", "Bambini", "Note Alimentari", "Note Extra"];
+      const headers = ["ID", "Nome", "Data Invito (gg/mm)", "Modalita", "Stato", "Data Conferma (gg/mm)", "Adulti", "Bambini", "Note Alimentari", "Note Extra"];
       const rows = invitati.map(g => [
         `"${g.id}"`,
         `"${(g.nome || '').replace(/"/g, '""')}"`,
-        g.data_invito || '',
+        g.data_invito ? formatDate(g.data_invito) : '',
         g.modalita || '',
         g.stato || '',
-        g.data_conferma || '',
+        g.data_conferma ? formatDate(g.data_conferma) : '',
         g.num_adulti || 0,
         g.num_bambini || 0,
         `"${(g.note_alimentari || '').replace(/"/g, '""')}"`,
@@ -1143,6 +1143,16 @@
       a.download = `invitati_matrimonio_chiara_ivan_${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    function formatDate(str) {
+      if (!str) return '-';
+      const clean = String(str).split('T')[0].trim();
+      const parts = clean.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}`;
+      }
+      return str;
     }
 
     function escapeHtml(str) {
