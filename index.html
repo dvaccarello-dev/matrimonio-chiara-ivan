@@ -255,6 +255,47 @@
     .badge-in-attesa { background: #fff3e0; color: var(--warning); }
     .badge-rifiutato { background: #ffebee; color: var(--danger); }
 
+    .lato-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+    }
+    .lato-chiara {
+      background: #fdf2f8;
+      color: #9d174d;
+      border: 1px solid #fbcfe8;
+    }
+    .lato-ivan {
+      background: #f0f9ff;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+    }
+    .lato-entrambi {
+      background: #fefce8;
+      color: #854d0e;
+      border: 1px solid #fef08a;
+    }
+
+    .targa-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: #1e293b;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
     .food-tag {
       display: inline-block;
       background: #fef3c7;
@@ -459,6 +500,12 @@
           <option value="Email">Email</option>
           <option value="Altro">Altro</option>
         </select>
+        <select id="filterLato" onchange="renderTable()">
+          <option value="">Tutti gli inviti (Chiara, Ivan, Entrambi)</option>
+          <option value="Chiara">Solo Chiara</option>
+          <option value="Ivan">Solo Ivan</option>
+          <option value="Chiara e Ivan">Chiara e Ivan</option>
+        </select>
         <button class="btn btn-outline btn-sm" onclick="toggleOnlyDietary()" id="dietaryFilterBtn">Solo con note alimentari</button>
       </div>
 
@@ -484,6 +531,7 @@
             <th>Stato</th>
             <th>Data Conf.</th>
             <th>Partecipanti</th>
+            <th>Targa Veicolo</th>
             <th>Note Alimentari</th>
             <th>Note Extra</th>
             <th class="btn-action" style="text-align: right;">Azioni</th>
@@ -508,9 +556,18 @@
         <input type="hidden" id="guestId">
 
         <div class="form-grid">
-          <div class="form-group full">
+          <div class="form-group">
             <label for="nome">Nome Invitato / Nucleo Familiare *</label>
             <input type="text" id="nome" required placeholder="Es. Marco Rossi e Famiglia">
+          </div>
+
+          <div class="form-group">
+            <label for="lato_invito">Invito di *</label>
+            <select id="lato_invito">
+              <option value="Chiara e Ivan">Chiara e Ivan</option>
+              <option value="Chiara">Chiara</option>
+              <option value="Ivan">Ivan</option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -551,6 +608,11 @@
           <div class="form-group">
             <label for="num_bambini">Numero Bambini</label>
             <input type="number" id="num_bambini" min="0" value="0">
+          </div>
+
+          <div class="form-group full">
+            <label for="targa">Targa Veicolo (per accesso Porta del Perugino / Parcheggio)</label>
+            <input type="text" id="targa" placeholder="Es. AA123BB" style="text-transform: uppercase;">
           </div>
 
           <div class="form-group full">
@@ -863,17 +925,19 @@
       const search = document.getElementById('searchInput').value.toLowerCase();
       const fStato = document.getElementById('filterStato').value;
       const fMod = document.getElementById('filterModalita').value;
+      const fLato = document.getElementById('filterLato') ? document.getElementById('filterLato').value : '';
 
       let list = invitati.filter(item => {
-        const matchName = (item.nome || '').toLowerCase().includes(search);
+        const matchName = (item.nome || '').toLowerCase().includes(search) || (item.targa || '').toLowerCase().includes(search);
         const matchStato = !fStato || item.stato === fStato;
         const matchMod = !fMod || item.modalita === fMod;
+        const matchLato = !fLato || (item.lato_invito || 'Chiara e Ivan') === fLato;
         const matchFood = !filterDietaryOnly || (item.note_alimentari && item.note_alimentari.trim() !== '' && item.note_alimentari.toLowerCase() !== 'nessuna');
-        return matchName && matchStato && matchMod && matchFood;
+        return matchName && matchStato && matchMod && matchLato && matchFood;
       });
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #888; padding: 30px;">Nessun invitato presente. Clicca "+ Nuovo Invitato" per aggiungerne uno.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #888; padding: 30px;">Nessun invitato presente con i filtri selezionati.</td></tr>`;
         return;
       }
 
@@ -882,18 +946,33 @@
         if (g.stato === 'Confermato') badgeClass = 'badge-confermato';
         if (g.stato === 'Rifiutato') badgeClass = 'badge-rifiutato';
 
+        const latoVal = g.lato_invito || 'Chiara e Ivan';
+        let latoClass = 'lato-entrambi';
+        if (latoVal === 'Chiara') latoClass = 'lato-chiara';
+        else if (latoVal === 'Ivan') latoClass = 'lato-ivan';
+
+        const targaHtml = (g.targa && g.targa.trim()) 
+          ? `<span class="targa-tag">🚗 ${escapeHtml(g.targa.toUpperCase())}</span>`
+          : `<span style="color:#bbb;">-</span>`;
+
         const foodHtml = (g.note_alimentari && g.note_alimentari.trim() !== '' && g.note_alimentari.toLowerCase() !== 'nessuna') 
           ? `<span class="food-tag">⚠️ ${escapeHtml(g.note_alimentari)}</span>` 
           : `<span style="color:#aaa;">-</span>`;
 
         return `
           <tr>
-            <td><strong>${escapeHtml(g.nome || '')}</strong></td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <strong>${escapeHtml(g.nome || '')}</strong>
+                <span class="lato-badge ${latoClass}">${escapeHtml(latoVal)}</span>
+              </div>
+            </td>
             <td>${formatDate(g.data_invito)}</td>
             <td>${g.modalita || '-'}</td>
             <td><span class="badge ${badgeClass}">${g.stato || 'In attesa'}</span></td>
             <td>${formatDate(g.data_conferma)}</td>
             <td>${g.num_adulti ?? 1} ad. ${parseInt(g.num_bambini) > 0 ? '+ ' + g.num_bambini + ' bamb.' : ''}</td>
+            <td>${targaHtml}</td>
             <td>${foodHtml}</td>
             <td><small style="color: #666;">${escapeHtml(g.note_extra || '-')}</small></td>
             <td class="btn-action" style="text-align: right; white-space: nowrap;">
@@ -927,6 +1006,8 @@
       document.getElementById('guestModal').classList.remove('active');
       document.getElementById('guestForm').reset();
       document.getElementById('guestId').value = "";
+      document.getElementById('lato_invito').value = "Chiara e Ivan";
+      document.getElementById('targa').value = "";
       document.getElementById('data_invito').value = new Date().toISOString().split('T')[0];
     }
 
@@ -953,6 +1034,8 @@
 
       document.getElementById('guestId').value = g.id;
       document.getElementById('nome').value = g.nome || '';
+      document.getElementById('lato_invito').value = g.lato_invito || 'Chiara e Ivan';
+      document.getElementById('targa').value = g.targa || '';
       document.getElementById('data_invito').value = g.data_invito || '';
       document.getElementById('modalita').value = g.modalita || 'WhatsApp';
       document.getElementById('stato').value = g.stato || 'In attesa';
@@ -970,6 +1053,8 @@
       const id = document.getElementById('guestId').value;
       const guestData = {
         nome: document.getElementById('nome').value.trim(),
+        lato_invito: document.getElementById('lato_invito').value || 'Chiara e Ivan',
+        targa: document.getElementById('targa').value.trim().toUpperCase(),
         data_invito: document.getElementById('data_invito').value,
         modalita: document.getElementById('modalita').value,
         stato: document.getElementById('stato').value,
@@ -1160,6 +1245,8 @@
           const headers = rawRows[0].map(h => String(h).toLowerCase().trim());
           const colMap = {
             nome: headers.findIndex(h => /nome|invitat|famiglia|ospite|nominativ/.test(h)),
+            lato_invito: headers.findIndex(h => /chiara|ivan|lato|invito.*di|di.*chi/.test(h)),
+            targa: headers.findIndex(h => /targa|veicol|auto|macchina|plate/.test(h)),
             data_invito: headers.findIndex(h => /data.*invit|invito/.test(h)),
             modalita: headers.findIndex(h => /modalit|canale|mezzo|tipo/.test(h)),
             stato: headers.findIndex(h => /stato|conferm|esito|rispost/.test(h)),
@@ -1178,6 +1265,13 @@
             const nomeVal = colMap.nome !== -1 && row[colMap.nome] ? String(row[colMap.nome]).trim() : '';
             if (!nomeVal) continue;
 
+            let lato = colMap.lato_invito !== -1 && row[colMap.lato_invito] ? String(row[colMap.lato_invito]).trim() : 'Chiara e Ivan';
+            if (/chiara.*ivan|ivan.*chiara|entramb/i.test(lato)) lato = 'Chiara e Ivan';
+            else if (/chiara/i.test(lato)) lato = 'Chiara';
+            else if (/ivan/i.test(lato)) lato = 'Ivan';
+            else lato = 'Chiara e Ivan';
+
+            const targaVal = colMap.targa !== -1 && row[colMap.targa] ? String(row[colMap.targa]).trim().toUpperCase() : '';
             const dInv = colMap.data_invito !== -1 ? parseExcelDate(row[colMap.data_invito]) : '';
             const dConf = colMap.data_conferma !== -1 ? parseExcelDate(row[colMap.data_conferma]) : '';
             const mod = colMap.modalita !== -1 && row[colMap.modalita] ? String(row[colMap.modalita]).trim() : 'WhatsApp';
@@ -1193,6 +1287,8 @@
 
             parsedList.push({
               nome: nomeVal,
+              lato_invito: lato,
+              targa: targaVal,
               data_invito: dInv || new Date().toISOString().split('T')[0],
               modalita: mod,
               stato: st,
@@ -1249,16 +1345,18 @@
         return;
       }
 
-      const headers = ["ID", "Nome", "Data Invito (gg/mm)", "Modalita", "Stato", "Data Conferma (gg/mm)", "Adulti", "Bambini", "Note Alimentari", "Note Extra"];
+      const headers = ["ID", "Nome", "Invito di", "Data Invito (gg/mm)", "Modalita", "Stato", "Data Conferma (gg/mm)", "Adulti", "Bambini", "Targa Veicolo", "Note Alimentari", "Note Extra"];
       const rows = invitati.map(g => [
         `"${g.id}"`,
         `"${(g.nome || '').replace(/"/g, '""')}"`,
+        `"${(g.lato_invito || 'Chiara e Ivan').replace(/"/g, '""')}"`,
         g.data_invito ? formatDate(g.data_invito) : '',
         g.modalita || '',
         g.stato || '',
         g.data_conferma ? formatDate(g.data_conferma) : '',
         g.num_adulti || 0,
         g.num_bambini || 0,
+        `"${(g.targa || '').replace(/"/g, '""')}"`,
         `"${(g.note_alimentari || '').replace(/"/g, '""')}"`,
         `"${(g.note_extra || '').replace(/"/g, '""')}"`
       ]);
