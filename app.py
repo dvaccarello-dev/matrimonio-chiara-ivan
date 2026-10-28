@@ -22,6 +22,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
             lato_invito TEXT DEFAULT 'Chiara e Ivan',
+            alloggio TEXT DEFAULT 'Nessuno',
             targa TEXT DEFAULT '',
             data_invito TEXT,
             modalita TEXT,
@@ -37,6 +38,10 @@ def init_db():
     # Aggiungi colonne se tabella già esisteva
     try:
         c.execute("ALTER TABLE invitati ADD COLUMN lato_invito TEXT DEFAULT 'Chiara e Ivan'")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        c.execute("ALTER TABLE invitati ADD COLUMN alloggio TEXT DEFAULT 'Nessuno'")
     except sqlite3.OperationalError:
         pass
     try:
@@ -114,12 +119,13 @@ class GuestHandler(SimpleHTTPRequestHandler):
             c = conn.cursor()
             c.execute('''
                 INSERT INTO invitati (
-                    nome, lato_invito, targa, data_invito, modalita, stato, data_conferma,
+                    nome, lato_invito, alloggio, targa, data_invito, modalita, stato, data_conferma,
                     num_adulti, num_bambini, note_alimentari, note_extra
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 data.get('nome', '').strip(),
                 data.get('lato_invito', 'Chiara e Ivan').strip(),
+                data.get('alloggio', 'Nessuno').strip(),
                 data.get('targa', '').strip().upper(),
                 data.get('data_invito', ''),
                 data.get('modalita', 'WhatsApp'),
@@ -163,6 +169,7 @@ class GuestHandler(SimpleHTTPRequestHandler):
                 UPDATE invitati SET
                     nome = ?,
                     lato_invito = ?,
+                    alloggio = ?,
                     targa = ?,
                     data_invito = ?,
                     modalita = ?,
@@ -176,6 +183,7 @@ class GuestHandler(SimpleHTTPRequestHandler):
             ''', (
                 data.get('nome', '').strip(),
                 data.get('lato_invito', 'Chiara e Ivan').strip(),
+                data.get('alloggio', 'Nessuno').strip(),
                 data.get('targa', '').strip().upper(),
                 data.get('data_invito', ''),
                 data.get('modalita', 'WhatsApp'),

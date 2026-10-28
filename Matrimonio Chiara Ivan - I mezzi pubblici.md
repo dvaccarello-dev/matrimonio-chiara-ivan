@@ -61,6 +61,36 @@
 
 ---
 
+## 4. Spostamenti Ospiti Forestieri: The Boutique Hotel (Via Cola di Rienzo, 243)
+
+* **Struttura ricettiva:** The Boutique Hotel – Via Cola di Rienzo, 243 (Quartiere Prati).
+
+### A. Da The Boutique Hotel a Porta del Perugino (Chiesa di Santo Stefano degli Abissini)
+* **Distanza:** ca. 1,6 km.
+* **Opzione 1 (Bus Diretto 492 - Consigliata):**
+  1. A piedi (ca. 100 m) su Via Cola di Rienzo fino alla fermata **Cola di Rienzo/Terenzio** (Codice palina: **70725**).
+  2. Bus **492** (direzione *Staz.ne Metro Cipro*) per 6 fermate fino a **Cavalleggeri/S. Pietro** (Codice palina: **77310**).
+  3. A piedi (ca. 150 m) su *Via della Stazione Vaticana* per l'accesso a **Porta del Perugino**.
+* **Opzione 2 (A piedi panoramico - ca. 18-20 min):**
+  - Percorri Via Cola di Rienzo verso Piazza Risorgimento, costeggia le mura vaticane e Piazza San Pietro, proseguendo a sinistra verso Largo Porta Cavalleggeri.
+
+### B. Da The Boutique Hotel a Villa Agrippina Gran Meliá (Via del Gianicolo, 3)
+* **Distanza:** ca. 1,8 km.
+* **In Bus (Bus 23 o 280):**
+  1. A piedi (ca. 350 m) fino a **P.za Cavour** o **Lgt Mellini/Cavour**.
+  2. Bus **23** (direzione *Pincherle/Parravano*) o Bus **280** (direzione *Partigiani*).
+  3. Scendi alla fermata **P.za Della Rovere** (Codice palina: **70100**).
+  4. Risali la rampa pedonale di *Via del Gianicolo* fino al civico 3.
+
+### C. Da Villa Agrippina a The Boutique Hotel (Rientro)
+* **In Bus (Bus 23 o 280 diretto):**
+  1. Da Villa Agrippina scendi a Lungotevere / Piazza della Rovere.
+  2. Fermata di salita: **P.za Della Rovere** (Codice palina: **80713**).
+  3. Linea: Bus **23** (direzione *Clodio*) o **280** (direzione *Mancini*) per 4 fermate fino a **Lgt Mellini/Cavour** (Codice palina: **71113**).
+  4. A piedi (ca. 300 m) imboccando Via Cola di Rienzo fino al civico 243.
+
+---
+
 ### Note Utili e Biglietti
 * **Biglietto BIT:** Costo € 1,50 (valido 100 minuti su bus, tram e 1 corsa metro).
 * **Tap & Go:** A bordo di tutti i bus puoi pagare contactless direttamente appoggiando la carta di pagamento o lo smartphone al validatore.

@@ -123,6 +123,22 @@
     .kpi-card.att { border-left: 5px solid var(--warning); }
     .kpi-card.rif { border-left: 5px solid var(--danger); }
     .kpi-card.food { border-left: 5px solid var(--accent); }
+    .kpi-card.hotel { border-left: 5px solid #6366f1; }
+
+    .hotel-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      background: #eef2ff;
+      color: #4338ca;
+      border: 1px solid #c7d2fe;
+      padding: 2px 7px;
+      border-radius: 8px;
+      white-space: nowrap;
+      width: fit-content;
+    }
 
     /* Action bar */
     .actions-bar {
@@ -446,7 +462,7 @@
       <h1>Chiara & Ivan</h1>
       <p>Gestione Inviti & Ricevimento • 3 Dicembre 2026, Roma</p>
       <div style="margin-top: 10px; display: flex; justify-content: center; gap: 10px; align-items: center; flex-wrap: wrap;">
-        <div class="header-badge">Santo Stefano degli Abissini & Villa Agrippina Gran Meliá</div>
+        <div class="header-badge">Santo Stefano degli Abissini • Villa Agrippina Gran Meliá • The Boutique Hotel</div>
         <span id="cloudStatusBadge" onclick="openCloudModal()" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; background: #fef3c7; color: #92400e; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #fde68a;" title="Clicca per configurare la sincronizzazione cloud">
           ☁️ Cloud: Non collegato (Configura)
         </span>
@@ -475,10 +491,15 @@
         <span class="kpi-value" id="kpi-rifiutati">0</span>
         <span class="kpi-sub">Hanno declinato</span>
       </div>
+      <div class="kpi-card hotel">
+        <span class="kpi-title">The Boutique Hotel</span>
+        <span class="kpi-value" id="kpi-hotel-count">0</span>
+        <span class="kpi-sub">Ospiti forestieri</span>
+      </div>
       <div class="kpi-card food">
         <span class="kpi-title">Note Alimentari</span>
         <span class="kpi-value" id="kpi-food-count">0</span>
-        <span class="kpi-sub">Richieste speciali catering</span>
+        <span class="kpi-sub">Richieste catering</span>
       </div>
     </div>
 
@@ -505,6 +526,12 @@
           <option value="Chiara">Solo Chiara</option>
           <option value="Ivan">Solo Ivan</option>
           <option value="Chiara e Ivan">Chiara e Ivan</option>
+        </select>
+        <select id="filterAlloggio" onchange="renderTable()">
+          <option value="">Tutti gli alloggi</option>
+          <option value="The Boutique Hotel">The Boutique Hotel (Forestieri)</option>
+          <option value="Nessuno">Residenti / Nessuno</option>
+          <option value="Altro">Altro alloggio</option>
         </select>
         <button class="btn btn-outline btn-sm" onclick="toggleOnlyDietary()" id="dietaryFilterBtn">Solo con note alimentari</button>
       </div>
@@ -613,6 +640,15 @@
           <div class="form-group full">
             <label for="targa">Targa Veicolo (per accesso Porta del Perugino / Parcheggio)</label>
             <input type="text" id="targa" placeholder="Es. AA123BB" style="text-transform: uppercase;">
+          </div>
+
+          <div class="form-group full">
+            <label for="alloggio">Alloggio / Ospiti Forestieri</label>
+            <select id="alloggio">
+              <option value="Nessuno">Nessuno (Residenti a Roma)</option>
+              <option value="The Boutique Hotel">The Boutique Hotel (Ospiti forestieri)</option>
+              <option value="Altro">Altro alloggio autonomo</option>
+            </select>
           </div>
 
           <div class="form-group full">
@@ -910,6 +946,7 @@
       const totPersoneConf = adultiConf + bambiniConf;
 
       const foodCount = invitati.filter(g => g.note_alimentari && g.note_alimentari.trim() !== '' && g.note_alimentari.toLowerCase() !== 'nessuna').length;
+      const hotelOspiti = invitati.filter(g => g.alloggio === 'The Boutique Hotel').reduce((sum, g) => sum + (parseInt(g.num_adulti) || 0) + (parseInt(g.num_bambini) || 0), 0);
 
       document.getElementById('kpi-tot-inviti').innerText = totInviti;
       document.getElementById('kpi-tot-persone').innerText = totPersoneConf;
@@ -917,6 +954,7 @@
       document.getElementById('kpi-bambini').innerText = bambiniConf;
       document.getElementById('kpi-in-attesa').innerText = inAttesa.length;
       document.getElementById('kpi-rifiutati').innerText = rifiutati.length;
+      document.getElementById('kpi-hotel-count').innerText = hotelOspiti;
       document.getElementById('kpi-food-count').innerText = foodCount;
     }
 
@@ -926,14 +964,16 @@
       const fStato = document.getElementById('filterStato').value;
       const fMod = document.getElementById('filterModalita').value;
       const fLato = document.getElementById('filterLato') ? document.getElementById('filterLato').value : '';
+      const fAlloggio = document.getElementById('filterAlloggio') ? document.getElementById('filterAlloggio').value : '';
 
       let list = invitati.filter(item => {
         const matchName = (item.nome || '').toLowerCase().includes(search) || (item.targa || '').toLowerCase().includes(search);
         const matchStato = !fStato || item.stato === fStato;
         const matchMod = !fMod || item.modalita === fMod;
         const matchLato = !fLato || (item.lato_invito || 'Chiara e Ivan') === fLato;
+        const matchAlloggio = !fAlloggio || (item.alloggio || 'Nessuno') === fAlloggio;
         const matchFood = !filterDietaryOnly || (item.note_alimentari && item.note_alimentari.trim() !== '' && item.note_alimentari.toLowerCase() !== 'nessuna');
-        return matchName && matchStato && matchMod && matchLato && matchFood;
+        return matchName && matchStato && matchMod && matchLato && matchAlloggio && matchFood;
       });
 
       if (list.length === 0) {
@@ -951,6 +991,10 @@
         if (latoVal === 'Chiara') latoClass = 'lato-chiara';
         else if (latoVal === 'Ivan') latoClass = 'lato-ivan';
 
+        const hotelBadge = (g.alloggio === 'The Boutique Hotel')
+          ? `<span class="hotel-tag">🏨 The Boutique Hotel</span>`
+          : '';
+
         const targaHtml = (g.targa && g.targa.trim()) 
           ? `<span class="targa-tag">🚗 ${escapeHtml(g.targa.toUpperCase())}</span>`
           : `<span style="color:#bbb;">-</span>`;
@@ -962,9 +1006,12 @@
         return `
           <tr>
             <td>
-              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <strong>${escapeHtml(g.nome || '')}</strong>
-                <span class="lato-badge ${latoClass}">${escapeHtml(latoVal)}</span>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <strong>${escapeHtml(g.nome || '')}</strong>
+                  <span class="lato-badge ${latoClass}">${escapeHtml(latoVal)}</span>
+                </div>
+                ${hotelBadge}
               </div>
             </td>
             <td>${formatDate(g.data_invito)}</td>
@@ -1007,6 +1054,7 @@
       document.getElementById('guestForm').reset();
       document.getElementById('guestId').value = "";
       document.getElementById('lato_invito').value = "Chiara e Ivan";
+      document.getElementById('alloggio').value = "Nessuno";
       document.getElementById('targa').value = "";
       document.getElementById('data_invito').value = new Date().toISOString().split('T')[0];
     }
@@ -1035,6 +1083,7 @@
       document.getElementById('guestId').value = g.id;
       document.getElementById('nome').value = g.nome || '';
       document.getElementById('lato_invito').value = g.lato_invito || 'Chiara e Ivan';
+      document.getElementById('alloggio').value = g.alloggio || 'Nessuno';
       document.getElementById('targa').value = g.targa || '';
       document.getElementById('data_invito').value = g.data_invito || '';
       document.getElementById('modalita').value = g.modalita || 'WhatsApp';
@@ -1054,6 +1103,7 @@
       const guestData = {
         nome: document.getElementById('nome').value.trim(),
         lato_invito: document.getElementById('lato_invito').value || 'Chiara e Ivan',
+        alloggio: document.getElementById('alloggio').value || 'Nessuno',
         targa: document.getElementById('targa').value.trim().toUpperCase(),
         data_invito: document.getElementById('data_invito').value,
         modalita: document.getElementById('modalita').value,
@@ -1246,6 +1296,7 @@
           const colMap = {
             nome: headers.findIndex(h => /nome|invitat|famiglia|ospite|nominativ/.test(h)),
             lato_invito: headers.findIndex(h => /chiara|ivan|lato|invito.*di|di.*chi/.test(h)),
+            alloggio: headers.findIndex(h => /allogg|hotel|boutique|alberg|forestier/.test(h)),
             targa: headers.findIndex(h => /targa|veicol|auto|macchina|plate/.test(h)),
             data_invito: headers.findIndex(h => /data.*invit|invito/.test(h)),
             modalita: headers.findIndex(h => /modalit|canale|mezzo|tipo/.test(h)),
@@ -1272,6 +1323,9 @@
             else lato = 'Chiara e Ivan';
 
             const targaVal = colMap.targa !== -1 && row[colMap.targa] ? String(row[colMap.targa]).trim().toUpperCase() : '';
+            let alloggVal = colMap.alloggio !== -1 && row[colMap.alloggio] ? String(row[colMap.alloggio]).trim() : 'Nessuno';
+            if (/boutique|hotel|forestier/i.test(alloggVal)) alloggVal = 'The Boutique Hotel';
+            else if (/nessun|no|resident/i.test(alloggVal)) alloggVal = 'Nessuno';
             const dInv = colMap.data_invito !== -1 ? parseExcelDate(row[colMap.data_invito]) : '';
             const dConf = colMap.data_conferma !== -1 ? parseExcelDate(row[colMap.data_conferma]) : '';
             const mod = colMap.modalita !== -1 && row[colMap.modalita] ? String(row[colMap.modalita]).trim() : 'WhatsApp';
@@ -1288,6 +1342,7 @@
             parsedList.push({
               nome: nomeVal,
               lato_invito: lato,
+              alloggio: alloggVal,
               targa: targaVal,
               data_invito: dInv || new Date().toISOString().split('T')[0],
               modalita: mod,
@@ -1345,11 +1400,12 @@
         return;
       }
 
-      const headers = ["ID", "Nome", "Invito di", "Data Invito (gg/mm)", "Modalita", "Stato", "Data Conferma (gg/mm)", "Adulti", "Bambini", "Targa Veicolo", "Note Alimentari", "Note Extra"];
+      const headers = ["ID", "Nome", "Invito di", "Alloggio", "Data Invito (gg/mm)", "Modalita", "Stato", "Data Conferma (gg/mm)", "Adulti", "Bambini", "Targa Veicolo", "Note Alimentari", "Note Extra"];
       const rows = invitati.map(g => [
         `"${g.id}"`,
         `"${(g.nome || '').replace(/"/g, '""')}"`,
         `"${(g.lato_invito || 'Chiara e Ivan').replace(/"/g, '""')}"`,
+        `"${(g.alloggio || 'Nessuno').replace(/"/g, '""')}"`,
         g.data_invito ? formatDate(g.data_invito) : '',
         g.modalita || '',
         g.stato || '',
